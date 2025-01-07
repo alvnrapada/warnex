@@ -206,7 +206,12 @@ defmodule Warnex do
   end
 
   defp parse_warning_block(block) do
-    String.split(String.trim(block), "\n")
+    block
+    |> String.trim()
+    |> String.split("\n")
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.reject(&String.starts_with?(&1, "Compiling"))
+    |> Enum.reject(&String.starts_with?(&1, "Generated"))
     |> case do
       [head | tail] ->
         # Parse the locations into individual lines
