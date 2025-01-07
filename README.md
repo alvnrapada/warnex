@@ -1,8 +1,14 @@
 # Warnex
 
-A phoenix / elixir app warning manager.
+[![Hex.pm](https://img.shields.io/hexpm/v/warnex.svg)](https://hex.pm/packages/warnex)
+[![Docs](https://img.shields.io/badge/hex-docs-brightgreen.svg)](https://hexdocs.pm/warnex)
+
+A Phoenix/Elixir application warning manager that helps track and manage application warnings effectively.
 
 ## Installation
+
+The package can be installed by adding `warnex` to your list of dependencies in `mix.exs`:
+
 ```elixir
 def deps do
   [
@@ -11,7 +17,27 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_d)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/warnex>.
+## Usage
+
+Initially, you must gather the warnings from the compilation output:
+
+```
+rm warnings.log; mix compile --force --all-warnings > warnings.log 2>&1
+```
+
+elixir this will generate `warnings.log` into your root folder, then you can now alias Warnex and use its functions
+
+## Features
+
+- Track application warnings
+- Manage warning states
+- Integrate with Phoenix applications
+
+## Documentation
+
+Full documentation can be found at [https://hexdocs.pm/warnex](https://hexdocs.pm/warnex).
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
