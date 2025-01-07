@@ -6,6 +6,11 @@ defmodule Warnex do
 
   ```
     rm warnings.log; mix compile --force --all-warnings > warnings.log 2>&1
+
+    OR
+
+    alias Warnex
+    Warnex.generate_warnings()
   ```
   """
 
