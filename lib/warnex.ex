@@ -9,6 +9,25 @@ defmodule Warnex do
   ```
   """
 
+  @doc """
+  Runs the compilation process and generates the warnings.log file.
+  Returns :ok if successful, {:error, reason} if the command fails.
+
+  ## Examples
+
+      iex> Warnex.generate_warnings()
+      :ok
+  """
+  def generate_warnings do
+    case System.cmd("sh", [
+           "-c",
+           "rm warnings.log; mix compile --force --all-warnings > warnings.log 2>&1"
+         ]) do
+      {_, 0} -> :ok
+      {error, _} -> {:error, error}
+    end
+  end
+
   ## Processing ##
 
   @doc """

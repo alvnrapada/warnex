@@ -22,7 +22,16 @@ end
 Initially, you must gather the warnings from the compilation output:
 
 ```
+Run
+
 rm warnings.log; mix compile --force --all-warnings > warnings.log 2>&1
+
+OR
+
+alias Warnex
+Warnex.generate_warnings()
+
+
 ```
 
 elixir this will generate `warnings.log` into your root folder, then you can now alias Warnex and use its functions
