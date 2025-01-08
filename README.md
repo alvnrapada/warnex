@@ -12,7 +12,7 @@ The package can be installed by adding `warnex` to your list of dependencies in 
 ```elixir
 def deps do
   [
-    {:warnex, "~> 0.1.0"}
+    {:warnex, "~> 0.2.0"}
   ]
 end
 ```

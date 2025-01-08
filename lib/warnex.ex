@@ -182,23 +182,25 @@ defmodule Warnex do
       iex(1)> Warnex.parse_warnings()
       [
         %{
-          message: "missing parentheses for expression following \"else:\" keyword. Parentheses are required to solve ambiguity inside keywords.",
+          message: "variable \"result\" is unused (if the variable is not meant to be used, prefix it with an underscore)",
           location: %{
-            line: 11,
-            filename: "shared_view.ex",
-            path: "lib/application_web/views"
+            line: 44,
+            filename: "recurring_call_job_status_cache.ex",
+            path: "lib/core_blayze_app/cache"
           }
         },
-      %{...},
-       ...
+        %{...},
+        ...
       ]
   """
   def parse_warnings do
     "warnings.log"
     |> File.read!()
-    # Split by new warnings
-    |> String.split(~r/^warning:/m)
-    # Parses block for warning
+    # Split by new warnings, but keep the "warning:" prefix for validation
+    |> String.split("warning: ")
+    # Remove the initial "Compiling" lines
+    |> Enum.reject(&String.starts_with?(&1, "Compiling"))
+    # Parse each warning block
     |> Enum.map(&parse_warning_block/1)
     # Remove nil entries (invalid warnings)
     |> Enum.reject(&is_nil/1)
@@ -206,41 +208,73 @@ defmodule Warnex do
   end
 
   defp parse_warning_block(block) do
-    block
-    |> String.trim()
-    |> String.split("\n")
-    |> Enum.reject(&(&1 == ""))
-    |> Enum.reject(&String.starts_with?(&1, "Compiling"))
-    |> Enum.reject(&String.starts_with?(&1, "Generated"))
-    |> case do
-      [head | tail] ->
-        # Parse the locations into individual lines
-        Enum.map(parse_locations(tail), fn {path, filename, line} ->
-          %{
-            message: head |> String.replace(",", " "),
-            location: %{path: path, filename: filename, line: line}
-          }
-        end)
+    # Split the block into lines and remove empty lines
+    lines =
+      block
+      |> String.split("\n")
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.reject(&String.starts_with?(&1, "Generated"))
 
-      _ ->
+    case lines do
+      # Skip empty blocks
+      [] ->
         nil
+
+      # Process valid warning blocks
+      _ ->
+        # Extract the message (first line)
+        message =
+          lines
+          |> List.first()
+          |> String.replace(~r/^warning:\s*/, "")
+          |> String.trim()
+
+        # Find the location line (usually starts with "└─" or contains a file path)
+        location =
+          lines
+          |> Enum.find(&(String.contains?(&1, "└─") || String.contains?(&1, ".ex:")))
+
+        case parse_location(location) do
+          nil -> nil
+          loc -> %{message: message, location: loc}
+        end
     end
   end
 
-  defp parse_locations(lines) do
-    lines
-    |> Enum.filter(&String.contains?(&1, ":"))
-    |> Enum.map(&parse_location_line/1)
-    |> Enum.reject(&is_nil/1)
-  end
+  defp parse_location(nil), do: nil
 
-  defp parse_location_line(location) do
+  defp parse_location(location) do
+    # Handle the new format with "└─" prefix
+    location =
+      if String.contains?(location, "└─") do
+        location
+        |> String.split("└─")
+        |> List.last()
+        |> String.trim()
+      else
+        location
+      end
+
     case String.split(location, ":", parts: 3) do
       [path, line_number | _rest] ->
-        case Integer.parse(line_number) do
+        case Integer.parse(String.trim(line_number)) do
           {number, _} ->
-            [filename | tail] = String.split(path, "/") |> Enum.reverse()
-            {tail |> Enum.reverse() |> Enum.join("/") |> String.trim(), filename, number}
+            parts = String.split(path, "/")
+            filename = List.last(parts)
+
+            path =
+              parts
+              |> Enum.reverse()
+              |> tl()
+              |> Enum.reverse()
+              |> Enum.join("/")
+              |> String.trim()
+
+            %{
+              filename: filename,
+              path: path,
+              line: number
+            }
 
           :error ->
             nil
